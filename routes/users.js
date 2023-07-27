@@ -1,58 +1,33 @@
 const bcrypt = require('bcrypt');
-
-const {
-  requireAuth,
-  requireAdmin,
-} = require('../middleware/auth');
-
-const {
-  getUsers,
-} = require('../controller/users');
-
-const initAdminUser = (app, next) => {
+const { requireAuth, requireAdmin } = require('../middleware/auth');
+const User = require('../models/user'); // Importamos el modelo User desde models/user.js
+const { getUsers } = require('../controller/users'); // Importamos la función getUsers desde controller/users.js
+const initAdminUser = async (app, next) => {
   const { adminEmail, adminPassword } = app.get('config');
   if (!adminEmail || !adminPassword) {
+    console.log('No se proporcionó adminEmail o adminPassword en la configuración.');
     return next();
   }
 
-  const adminUser = {
-    email: adminEmail,
-    password: bcrypt.hashSync(adminPassword, 10),
-    roles: { admin: true },
-  };
-
-  // TODO: crear usuaria admin
-  // Primero ver si ya existe adminUser en base de datos
-  // si no existe, hay que guardarlo
+  try {
+    const adminUserExists = await User.findOne({ email: adminEmail });
+    if (!adminUserExists) {
+      const adminUser = new User({
+        email: adminEmail,
+        password: bcrypt.hashSync(adminPassword, 10),
+        roles: { admin: true },
+      });
+      await adminUser.save();
+      console.log('Admin user created successfully:', adminUser);
+    } else {
+      console.log('The user admin already exists', adminUserExists);
+    }
+  } catch (error) {
+    console.error('Error creating admin user:', error);
+  }
 
   next();
 };
-
-/*
- * Diagrama de flujo de una aplicación y petición en node - express :
- *
- * request  -> middleware1 -> middleware2 -> route
- *                                             |
- * response <- middleware4 <- middleware3   <---
- *
- * la gracia es que la petición va pasando por cada una de las funciones
- * intermedias o "middlewares" hasta llegar a la función de la ruta, luego esa
- * función genera la respuesta y esta pasa nuevamente por otras funciones
- * intermedias hasta responder finalmente a la usuaria.
- *
- * Un ejemplo de middleware podría ser una función que verifique que una usuaria
- * está realmente registrado en la aplicación y que tiene permisos para usar la
- * ruta. O también un middleware de traducción, que cambie la respuesta
- * dependiendo del idioma de la usuaria.
- *
- * Es por lo anterior que siempre veremos los argumentos request, response y
- * next en nuestros middlewares y rutas. Cada una de estas funciones tendrá
- * la oportunidad de acceder a la consulta (request) y hacerse cargo de enviar
- * una respuesta (rompiendo la cadena), o delegar la consulta a la siguiente
- * función en la cadena (invocando next). De esta forma, la petición (request)
- * va pasando a través de las funciones, así como también la respuesta
- * (response).
- */
 
 /** @module users */
 module.exports = (app, next) => {
@@ -96,6 +71,7 @@ module.exports = (app, next) => {
    * @code {404} si la usuaria solicitada no existe
    */
   app.get('/users/:uid', requireAuth, (req, resp) => {
+    // Implementación para obtener información de una usuaria
   });
 
   /**
@@ -118,8 +94,7 @@ module.exports = (app, next) => {
    * @code {403} si ya existe usuaria con ese `email`
    */
   app.post('/users', requireAdmin, (req, resp, next) => {
-    // TODO: implementar la ruta para agregar
-    // nuevos usuarios
+    // TODO: implementar la ruta para agregar nuevos usuarios
   });
 
   /**
@@ -145,6 +120,7 @@ module.exports = (app, next) => {
    * @code {404} si la usuaria solicitada no existe
    */
   app.put('/users/:uid', requireAuth, (req, resp, next) => {
+    // Implementación para modificar una usuaria
   });
 
   /**
@@ -164,6 +140,7 @@ module.exports = (app, next) => {
    * @code {404} si la usuaria solicitada no existe
    */
   app.delete('/users/:uid', requireAuth, (req, resp, next) => {
+    // Implementación para eliminar una usuaria
   });
 
   initAdminUser(app, next);
