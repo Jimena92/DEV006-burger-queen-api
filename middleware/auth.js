@@ -18,19 +18,56 @@ module.exports = (secret) => (req, resp, next) => {
       return next(403);
     }
 
-    // TODO: Verificar identidad del usuario usando `decodeToken.uid`
+    // TODO: Verificar identidad del usuario usando `decodedToken.id`
+    // Aquí puedes guardar el ID del usuario en `req.userId` para su uso posterior.
+    req.userId = decodedToken.id;
+    next();
   });
 };
 
-module.exports.isAuthenticated = (req) => (
-  // TODO: decidir por la informacion del request si la usuaria esta autenticada
-  false
-);
+module.exports.isAuthenticated = (req) => {
+  const { authorization } = req.headers;
 
-module.exports.isAdmin = (req) => (
-  // TODO: decidir por la informacion del request si la usuaria es admin
-  false
-);
+  if (!authorization) {
+    return false;
+  }
+
+  const [type, token] = authorization.split(' ');
+
+  if (type.toLowerCase() !== 'bearer') {
+    return false;
+  }
+
+  try {
+    jwt.verify(token, secret); // Verificar token sin secret ya que no estamos generando uno aquí.
+    return true;
+  } catch (error) {
+    return false;
+  }
+};
+
+module.exports.isAdmin = (req) => {
+  const { authorization } = req.headers;
+
+  if (!authorization) {
+    return false;
+  }
+
+  const [type, token] = authorization.split(' ');
+
+  if (type.toLowerCase() !== 'bearer') {
+    return false;
+  }
+
+  try {
+    const decodedToken = jwt.verify(token, secret);
+
+    // Verificar si el token tiene el rol de administrador
+    return decodedToken.roles && decodedToken.roles.admin === true;
+  } catch (error) {
+    return false;
+  }
+};
 
 module.exports.requireAuth = (req, resp, next) => (
   (!module.exports.isAuthenticated(req))
