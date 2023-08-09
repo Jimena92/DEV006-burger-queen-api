@@ -12,4 +12,5 @@ module.exports = {
     },
     autoStart: false,
   },
+  testTimeout: 30000, // Aquí puedes especificar el tiempo límite en milisegundos 
 };

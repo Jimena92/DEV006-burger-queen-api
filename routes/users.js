@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 const bcrypt = require('bcrypt');
 const { requireAuth, requireAdmin } = require('../middleware/auth');
 const User = require('../models/user');
@@ -16,24 +17,17 @@ const initAdminUser = async (app, next) => {
       const adminUser = new User({
         email: adminEmail,
         password: bcrypt.hashSync(adminPassword, 10),
-        roles: { admin: true },
+        role: 'admin', // Cambiamos roles por role
       });
       await adminUser.save();
       console.log('Admin user created successfully:', adminUser);
     } else {
       console.log('The user admin already exists', adminUserExists);
     }
-  } catch (error) {
-    console.error('Error creating admin user:', error);
+    return next();
+  } catch (err) {
+    next(err);
   }
-
-  // Implementamos la ruta GET /users que lista usuarios
-  app.get('/users', requireAdmin, getUsers);
-
-  // Implementamos la ruta POST /users que crea una usuaria
-  app.post('/users', requireAdmin, createUser);
-
-  next();
 };
 
 /** @module users */
@@ -83,6 +77,7 @@ module.exports = (app, next) => {
    * @code {403} Si ya existe una usuaria con el mismo correo electrónico.
    * @code {500} Si ocurre un error en el servidor.
    */
+
   app.post('/users', requireAdmin, createUser);
 
   /**
@@ -103,8 +98,9 @@ module.exports = (app, next) => {
    * @code {404} Si la usuaria solicitada no existe.
    * @code {500} Si ocurre un error en el servidor.
    */
+
   app.get('/users/:uid', requireAuth, (req, resp) => {
-    // Implementación para obtener información de una usuaria
+    /* Implementación para obtener información de una usuaria */
   });
 
   /**
@@ -131,8 +127,9 @@ module.exports = (app, next) => {
    * @code {404} Si la usuaria solicitada no existe.
    * @code {500} Si ocurre un error en el servidor.
    */
+
   app.put('/users/:uid', requireAuth, (req, resp, next) => {
-    // Implementación para modificar una usuaria
+    /* Implementación para modificar una usuaria */
   });
 
   /**
@@ -153,6 +150,7 @@ module.exports = (app, next) => {
    * @code {404} Si la usuaria solicitada no existe.
    * @code {500} Si ocurre un error en el servidor.
    */
+
   app.delete('/users/:uid', requireAuth, (req, resp, next) => {
     // Implementación para eliminar una usuaria
   });

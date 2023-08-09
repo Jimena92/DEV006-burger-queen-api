@@ -3,7 +3,7 @@ const bcrypt = require('bcrypt');
 const config = require('../config');
 const User = require('../models/user');
 
-const { secret } = config;
+const { secret } = config; // Aquí obtenemos el secret del archivo config.js
 
 /** @module auth */
 module.exports = (app, nextMain) => {
@@ -38,7 +38,7 @@ module.exports = (app, nextMain) => {
       }
 
       // Si el usuario existe y la contraseña coincide, crear un token de autenticación usando jwt
-      const token = jwt.sign({ id: user._id, email: user.email }, secret);
+      const token = jwt.sign({ id: user._id, email: user.email, role: user.role }, secret);
 
       // Enviar el token en la respuesta
       resp.json({ token });
@@ -46,6 +46,7 @@ module.exports = (app, nextMain) => {
       console.error('Error de autenticación:', error);
       next(500);
     }
+    next();
   });
 
   return nextMain();
